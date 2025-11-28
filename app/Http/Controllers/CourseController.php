@@ -33,24 +33,35 @@ class CourseController extends Controller
     }
     public function annotationEdit(Request $request)
     {
-        $annotation = VideoAnnotation::find($request->annotation_id);
-        if ($annotation) {
-            $annotation->video_id = $request->video_id;
-            $annotation->annotation_text = $request->annotation;
-            $annotation->save();
-            return response()->json(['message' => 'Annotation updated successfully']);
-        } else {
-            return response()->json(['message' => 'Annotation not found'], 404);
+        $request->validate([
+            'annotation_id' => 'required|integer|exists:video_annotations,id'
+        ]);
+
+        $annotation = VideoAnnotation::findOrFail($request->annotation_id);
+        
+        if ($annotation->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
+
+        $annotation->video_id = $request->video_id;
+        $annotation->annotation_text = $request->annotation;
+        $annotation->save();
+        
+        return response()->json(['message' => 'Annotation updated successfully']);
     }
     public function deleteAnnotation(Request $request)
     {
-        $annotation = VideoAnnotation::find($request->id);
-        if ($annotation) {
-            $annotation->delete();
-            return response()->json(['message' => 'Annotation deleted successfully']);
-        } else {
-            return response()->json(['message' => 'Annotation not found'], 404);
+        $request->validate([
+            'id' => 'required|integer|exists:video_annotations,id'
+        ]);
+
+        $annotation = VideoAnnotation::findOrFail($request->id);
+        
+        if ($annotation->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
+        
+        $annotation->delete();
+        return response()->json(['message' => 'Annotation deleted successfully']);
     }
 }
