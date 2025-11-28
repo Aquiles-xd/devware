@@ -1,0 +1,46 @@
+services:
+  app:
+    build: .
+    container_name: laravel_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    networks:
+      - laravel
+
+  web:
+    image: nginx:latest
+    container_name: laravel_web
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - laravel
+
+  db:
+    image: mysql:8.0
+    container_name: laravel_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+    volumes:
+      - dbdata:/var/lib/mysql
+    ports:
+      - "3307:3306" # muda a porta para evitar conflito com o MySQL do XAMPP
+    networks:
+      - laravel
+
+networks:
+  laravel:
+
+volumes:
+  dbdata:
